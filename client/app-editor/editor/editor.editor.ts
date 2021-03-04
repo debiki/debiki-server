@@ -433,9 +433,15 @@ export const Editor = createFactory<any, EditorState>({
     // Makes sense now with the in-page message preview.
     //
     dieIf(files.length != 1, 'EsE5GPY82');
+
+    const headers = { 'X-XSRF-TOKEN': getSetCookie('XSRF-TOKEN') };
+    // For embedded comments, need to incl the session id in a header,
+    // since browsers block cookies (tracking prevention features).
+    Server.addAnyNoCookieHeaders(headers);
+
     FileAPI.upload({   // a bit dupl code [2UK503]
       url: '/-/upload-public-file',
-      headers: { 'X-XSRF-TOKEN': getSetCookie('XSRF-TOKEN') },
+      headers,
       files: { file: files },
       // This is per file.
       fileprogress: (event, file, xhr, options) => {

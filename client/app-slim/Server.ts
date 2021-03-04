@@ -702,7 +702,7 @@ function get(uri: string, successFn: GetSuccessFn, errorFn?: GetErrorFn, options
  * the browsers refuse to use cookies, e.g. Privacy Badger blocks cookies or iOS
  * incorrectly thinks we're doing some kind of cross site tracking.
  */
-function addAnyNoCookieHeaders(headers: { [headerName: string]: string }) {  // [NOCOOKIES]
+export function addAnyNoCookieHeaders(headers: { [headerName: string]: St }) {  // [NOCOOKIES]
   const mainWin = getMainWin();
 
   // @ifdef DEBUG

@@ -328,15 +328,16 @@ class EdSecurity(globals: Globals) {
     val expireIdleAfterMillis: Long = expireIdleAfterMins * MillisPerMinute
 
     // If we cannot use cookies, then the sid is sent in a header. [NOCOOKIES]
-    val anySessionIdCookieValue =
-      urlDecodeCookie(SessionIdCookieName, request) orElse request.headers.get(SessionIdHeaderName)
+    val anySessionIdCookieValue: Opt[St] = urlDecodeCookie(SessionIdCookieName, request)
+    val anySessionId: Opt[St] =
+          anySessionIdCookieValue orElse request.headers.get(SessionIdHeaderName)
 
     val now = globals.now()
 
     val sessionIdStatus: SidStatus =
-      anySessionIdCookieValue.map(
-        checkSessionId(
-          siteId, _, now, expireIdleAfterMillis = expireIdleAfterMillis)) getOrElse SidAbsent
+          anySessionId.map(
+            checkSessionId(siteId, _, now, expireIdleAfterMillis = expireIdleAfterMillis)
+            ) getOrElse SidAbsent
 
     // On GET requests, simply accept the value of the xsrf cookie.
     // (On POST requests, however, we check the xsrf form input value)
@@ -409,7 +410,9 @@ class EdSecurity(globals: Globals) {
         val xsrfOk = {
           val xsrfStatus =
             checkXsrfToken(
-              xsrfToken, anyXsrfCookieValue, now, expireIdleAfterMillis = expireIdleAfterMillis)
+              xsrfToken, anyXsrfCookieValue,
+              thereIsASidCookie = anySessionIdCookieValue.isDefined,
+              now, expireIdleAfterMillis = expireIdleAfterMillis)
 
           def helpText(theProblem: String, nowHaveOrWillGet: String): String = i"""
             |Security issue: $theProblem. Please try again:
@@ -569,12 +572,12 @@ class EdSecurity(globals: Globals) {
 
 
 
-  private def checkXsrfToken(xsrfToken: String, anyXsrfCookieValue: Option[String],
-      now: When, expireIdleAfterMillis: Long): XsrfStatus = {
+  private def checkXsrfToken(xsrfToken: St, anyXsrfCookieValue: Opt[St],
+        thereIsASidCookie: Bo, now: When, expireIdleAfterMillis: i64): XsrfStatus = {
     SECURITY; TESTS_MISSING // that tests if the wrong hashes are rejected
 
     // Check matches cookie, or that there's an ok crypto hash.
-    var xsrfOk: XsrfOk = anyXsrfCookieValue match {
+    val xsrfOk: XsrfOk = anyXsrfCookieValue match {
       case Some(xsrfCookieValue) =>
         // The Double Submit Cookie pattern [4AW2J7], usually also the Custom Request Header pattern, see:
         // https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet
@@ -586,7 +589,20 @@ class EdSecurity(globals: Globals) {
         }
         XsrfOk(xsrfToken)
       case None =>
+        // If the browser could send a session id cookie, it can also send a xsrf cookie?
+        dieIf(Globals.isDevOrTest && thereIsASidCookie, "TyESID0XTKN",
+            "Got a sid cookie but no xsrf cookie, weird")
+
         // The Encrypted Token Pattern, usually also the Custom Request Header pattern.
+        //
+        // This is actually not needed, if !thereIsASidCookie, because then xsrf
+        // requests aren't possible (since no automatic credentials were included).
+        // Unless using HTTP Basic Auth or Digest Auth but Ty doesn't — the browser
+        // would include them automatically, just like cookies, right. But
+        // the Ty browser app doesn't use Basic or Digest auth.
+        // Do this check anyway, also if !thereIsASidCookie  (can be used for
+        // rate limiting, if nothing else?).
+        //
         val hashIndex: Int = xsrfToken.length - HashLength
         if (hashIndex < 1) {
           return XsrfBad

@@ -43,10 +43,16 @@ local res, err = httpc:request({
     path = "/-/_int_req/may-upload-file",
     query = "sizeBytes=" .. content_length,
     headers = {
-        ["Host"] = host,  -- [ngx_host_hdr]
-        ["Cookie"] = ngx.var.http_cookie,
-        ["X-Request-Id"] = ngx.var.request_id,
-        ["X-Forwarded-For"] = ngx.var.proxy_add_x_forwarded_for,
+        ['Host'] = host,  -- [ngx_host_hdr]
+        -- Sometimes cookies won't work (e.g. from inside embedded comments iframes,
+        -- because of browser anti-tracking features). Then we use X-Ty- headers instead.
+        ['Cookie'] = ngx.var.http_cookie,
+        ['X-Ty-Avoid-Cookies'] = ngx.var.http_x_ty_avoid_cookies,
+        ['X-Ty-Sid'] = ngx.var.http_x_ty_sid,
+        ['X-Ty-Xsrf'] = ngx.var.http_x_ty_xsrf,
+        ['X-XSRF-TOKEN'] = ngx.var.http_x_xsrf_token,
+        ['X-Request-Id'] = ngx.var.request_id,
+        ['X-Forwarded-For'] = ngx.var.proxy_add_x_forwarded_for,
     },
 })
 

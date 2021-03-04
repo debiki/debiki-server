@@ -240,12 +240,11 @@ GET   /-/load-post-revisions    controllers.EditController.loadPostRevisions(pos
 
 POST  /-/start-private-group-talk controllers.GroupTalkController.sendMessage
 
-GET   /-/_int_req/may-upload-file controllers.UploadsController.intReq_mayUploadFile(sizeBytes: Int)
+GET   /-/_int_req/may-upload-file                         controllers.UploadsController.intReq_mayUploadFile(sizeBytes: Int)
+GET   /-/_int_req/may-download-file/:pubSiteId/*hashPath  controllers.UploadsController.authUpload(pubSiteId, hashPath)
 POST  /-/upload-public-file     controllers.UploadsController.uploadPublicFile
 POST  /-/upload-avatar          controllers.UploadsController.uploadAvatar(userId: Int)
 POST  /-/remove-avatar          controllers.UploadsController.removeAvatar
-# CLEAN_UP RENAME to auth-download? or auth-upload-download?
-GET   /-/auth-upload/:publSiteId/*hashPath controllers.UploadsController.authUpload(publSiteId, hashPath)
 
 # CLEAN_UP remove, hardcode path in Globals instead?  [2KGLCQ4]
 GET   /-/u/*relativePath        controllers.UploadsController.servePublicFile(relativePath)
