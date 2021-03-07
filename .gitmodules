@@ -77,6 +77,27 @@
 	url = https://github.com/debiki/talkyard-prod-swarm.git
 
 
+# ----- Release channels
+
+# Each release channel has its own branch in the talkyard-version repo.
+# And, in ./relchans/, they're checked out in sub directories, one
+# directory per release channel (Git branch).
+
+[submodule "relchans/tyse-v0-dev"]
+	path = relchans/tyse-v0-dev
+	url = https://github.com/debiki/talkyard-versions.git
+	branch = tyse-v0-dev
+
+# [submodule "relchans/tyse-v0-rapid"]  — later
+
+[submodule "relchans/tyse-v0-regular"]
+	path = relchans/tyse-v0-regular
+	url = https://github.com/debiki/talkyard-versions.git
+	branch = tyse-v0-regular
+
+# [submodule "relchans/tyse-v0-stable"]  — later
+
+
 # ----- Vendored dependencies
 
 # Vendored code is in the ty-vendors repo, but in different branches
